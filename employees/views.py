@@ -9,7 +9,8 @@ from django.http import HttpResponse, JsonResponse
 from django.template.loader import get_template
 from django.utils import timezone
 from .models import Employee, Department
-from .forms import EmployeeProfileForm, AddEmployeeForm
+from .forms import EmployeeProfileForm, AddEmployeeForm, AttendanceForm
+from .models import Attendance
 from django.db import models
 from rbac.decorators import rbac_required, any_rbac_required
 from audit.utils import AuditLogger, AuditDecorator
@@ -507,6 +508,85 @@ def employee_profile(request):
         'title': 'My Profile',
     }
     return render(request, 'employees/profile.html', context)
+
+
+@login_required
+@rbac_required('employees.view', redirect_url='dashboard')
+def attendance_list(request):
+    """List attendance records with basic filtering"""
+    attendances = Attendance.objects.select_related('employee__user', 'created_by').all()
+
+    employee_id = request.GET.get('employee')
+    if employee_id:
+        attendances = attendances.filter(employee__id=employee_id)
+
+    date = request.GET.get('date')
+    if date:
+        attendances = attendances.filter(date=date)
+
+    paginator = Paginator(attendances, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'page_obj': page_obj,
+        'attendances': page_obj,
+        'employees': Employee.objects.all(),
+        'title': 'Attendance Records',
+    }
+    return render(request, 'employees/attendance_list.html', context)
+
+
+@login_required
+@rbac_required('employees.add', redirect_url='employees:list')
+def attendance_create(request):
+    """Create a manual attendance record (admin)"""
+    if request.method == 'POST':
+        form = AttendanceForm(request.POST)
+        if form.is_valid():
+            attendance = form.save(commit=False)
+            attendance.created_by = request.user
+            attendance.save()
+            AuditLogger.log_action(
+                user=request.user,
+                action='create',
+                description=f'Created attendance for {attendance.employee} on {attendance.date}',
+                obj=attendance,
+                request=request,
+                severity='low',
+                module='employees'
+            )
+            messages.success(request, 'Attendance recorded.')
+            return redirect('employees:attendance_list')
+    else:
+        form = AttendanceForm()
+
+    return render(request, 'employees/attendance_form.html', {'form': form, 'title': 'Add Attendance'})
+
+
+@login_required
+@rbac_required('employees.edit', redirect_url='employees:attendance_list')
+def attendance_edit(request, pk):
+    attendance = get_object_or_404(Attendance, pk=pk)
+    if request.method == 'POST':
+        form = AttendanceForm(request.POST, instance=attendance)
+        if form.is_valid():
+            attendance = form.save()
+            AuditLogger.log_action(
+                user=request.user,
+                action='update',
+                description=f'Updated attendance {attendance.pk}',
+                obj=attendance,
+                request=request,
+                severity='low',
+                module='employees'
+            )
+            messages.success(request, 'Attendance updated.')
+            return redirect('employees:attendance_list')
+    else:
+        form = AttendanceForm(instance=attendance)
+
+    return render(request, 'employees/attendance_form.html', {'form': form, 'title': 'Edit Attendance', 'attendance': attendance})
 
 @login_required
 def edit_profile(request):

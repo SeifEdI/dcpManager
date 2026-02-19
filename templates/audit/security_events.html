@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Events - dcpManager{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-shield-alt text-danger me-3"></i>Security Events
+        </h1>
+        <p class="text-muted mb-0">Monitor security-related activities and threats</p>
+    </div>
+    <a href="{% url 'audit:dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+<!-- Alert Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card dashboard-card border-danger">
+            <div class="card-body text-center">
+                <div class="dashboard-icon" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4 class="mb-1 text-danger">{{ page_obj.paginator.count }}</h4>
+                <p class="text-muted mb-0">Total Events</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card border-warning">
+            <div class="card-body text-center">
+                <div class="dashboard-icon icon-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h4 class="mb-1 text-warning">
+                    {{ page_obj|length }}
+                </h4>
+                <p class="text-muted mb-0">Unresolved</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card border-info">
+            <div class="card-body text-center">
+                <div class="dashboard-icon icon-info">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h4 class="mb-1 text-info">{{ risk_levels|length }}</h4>
+                <p class="text-muted mb-0">Risk Levels</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card border-success">
+            <div class="card-body text-center">
+                <div class="dashboard-icon icon-success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4 class="mb-1 text-success">
+                    {% if current_filters.resolved == 'true' %}Resolved{% elif current_filters.resolved == 'false' %}Unresolved{% else %}All{% endif %}
+                </h4>
+                <p class="text-muted mb-0">Filter Status</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Filters
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label for="event_type" class="form-label">Event Type</label>
+                <select name="event_type" id="event_type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for event_type in event_types %}
+                        <option value="{{ event_type }}" {% if current_filters.event_type == event_type %}selected{% endif %}>
+                            {{ event_type|title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="risk_level" class="form-label">Risk Level</label>
+                <select name="risk_level" id="risk_level" class="form-select">
+                    <option value="">All Levels</option>
+                    {% for risk_level in risk_levels %}
+                        <option value="{{ risk_level }}" {% if current_filters.risk_level == risk_level %}selected{% endif %}>
+                            {{ risk_level|title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="resolved" class="form-label">Status</label>
+                <select name="resolved" id="resolved" class="form-select">
+                    <option value="">All Events</option>
+                    <option value="false" {% if current_filters.resolved == 'false' %}selected{% endif %}>Unresolved</option>
+                    <option value="true" {% if current_filters.resolved == 'true' %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" name="username" id="username" class="form-control" 
+                       placeholder="Search username..." value="{{ current_filters.username | default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">From Date</label>
+                <input type="date" name="date_from" id="date_from" class="form-control" 
+                       value="{{ current_filters.date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">To Date</label>
+                <input type="date" name="date_to" id="date_to" class="form-control" 
+                       value="{{ current_filters.date_to }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search me-2"></i>Apply Filters
+                </button>
+                <a href="{% url 'audit:security_events' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Clear Filters
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Security Events Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Event Type</th>
+                            <th>Risk Level</th>
+                            <th>Description</th>
+                            <th>User/IP</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in page_obj %}
+                        <tr class="{% if event.risk_level == 'critical' %}table-danger{% elif event.risk_level == 'high' %}table-warning{% endif %}">
+                            <td>
+                                <small>{{ event.timestamp|date:"M d, Y" }}</small><br>
+                                <small class="text-muted">{{ event.timestamp|date:"H:i:s" }}</small>
+                            </td>
+                            <td>
+                                {% if event.event_type == 'failed_login' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-sign-in-alt me-1"></i>Failed Login
+                                    </span>
+                                {% elif event.event_type == 'suspicious_activity' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Suspicious Activity
+                                    </span>
+                                {% elif event.event_type == 'unauthorized_access' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-ban me-1"></i>Unauthorized Access
+                                    </span>
+                                {% elif event.event_type == 'role_change' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-user-cog me-1"></i>Role Change
+                                    </span>
+                                {% elif event.event_type == 'data_export' %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-download me-1"></i>Data Export
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ event.event_type|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if event.risk_level == 'critical' %}
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Critical
+                                    </span>
+                                {% elif event.risk_level == 'high' %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>High
+                                    </span>
+                                {% elif event.risk_level == 'medium' %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-info-circle me-1"></i>Medium
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Low
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{ event.description|truncatechars:100 }}</td>
+                            <td>
+                                {% if event.username_attempted %}
+                                    <strong>{{ event.username_attempted }}</strong><br>
+                                {% endif %}
+                                {% if event.ip_address %}
+                                    <small class="font-monospace text-muted">{{ event.ip_address }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if event.resolved %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Resolved
+                                    </span>
+                                    {% if event.resolved_by %}
+                                        <br><small class="text-muted">by {{ event.resolved_by }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>Pending
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not event.resolved %}
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="resolveEvent({{ event.id }})">
+                                        <i class="fas fa-check me-1"></i>Resolve
+                                    </button>
+                                {% endif %}
+                                <button class="btn btn-sm btn-outline-info" 
+                                        onclick="viewEventDetails({{ event.id }})">
+                                    <i class="fas fa-eye me-1"></i>Details
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="card-footer bg-light">
+                    <nav aria-label="Security events pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in current_filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No security events found</h5>
+                <p class="text-muted">This is good news! No security events match your current filters.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function resolveEvent(eventId) {
+    if (confirm('Mark this security event as resolved?')) {
+        // In a real implementation, this would make an AJAX call
+        fetch(`/audit/security-events/${eventId}/resolve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error resolving event: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error resolving event: ' + error);
+        });
+    }
+}
+
+function viewEventDetails(eventId) {
+    // In a real implementation, this would show a modal with event details
+    alert('Event details functionality would be implemented here for event ID: ' + eventId);
+}
+</script>
+{% endblock %}

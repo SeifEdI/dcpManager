@@ -448,10 +448,31 @@
                         </a>
                     </li>
                     {% if user.has_rbac_permission|default:user.is_staff %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'employees:list' %}">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="employeeDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-users me-2"></i>Employees
                             </a>
+                            <ul class="dropdown-menu">
+                                {% if user.has_rbac_permission|default:user.is_staff %}
+                                    <li><a class="dropdown-item" href="{% url 'employees:list' %}">
+                                        <i class="fas fa-users"></i>Employees Management
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#">
+                                        <i class="fas fa-users-cog"></i>Add employee
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{%url 'employees:attendance_list'%}">
+                                        <i class="fas fa-shield-alt"></i>Pointage
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#">
+                                        <i class="fas fa-list"></i>Audit Logs
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#">
+                                        <i class="fas fa-exclamation-triangle"></i>Security Events
+                                    </a></li>
+                                {% endif %}
+                            </ul>
+                            
                         </li>
                     {% endif %}
                     {% if user.has_rbac_permission|default:user.is_staff %}

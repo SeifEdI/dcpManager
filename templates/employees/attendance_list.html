@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Records{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Attendance Records</h5>
+    <div>
+      <a href="{% url 'employees:attendance_add' %}" class="btn btn-primary">Add Attendance</a>
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="get" class="row g-3 mb-3">
+      <div class="col-md-4">
+        <label class="form-label">Employee</label>
+        <select name="employee" class="form-select">
+          <option value="">All</option>
+          {% for emp in employees %}
+            <option value="{{ emp.id }}" {% if request.GET.employee == emp.id|stringformat:'s' %}selected{% endif %}>{{ emp.full_name }} ({{ emp.employee_id }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Date</label>
+        <input type="date" name="date" value="{{ request.GET.date }}" class="form-control">
+      </div>
+      <div class="col-md-2 align-self-end">
+        <button class="btn btn-outline-primary">Filter</button>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Date</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Duration</th>
+            <th>Created By</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in page_obj %}
+            <tr>
+              <td>{{ a.employee.full_name }}<br><small class="text-muted">{{ a.employee.employee_id }}</small></td>
+              <td>{{ a.date }}</td>
+              <td>{{ a.clock_in|default:'—' }}</td>
+              <td>{{ a.clock_out|default:'—' }}</td>
+              <td>{{ a.computed_duration|default:'—' }}</td>
+              <td>
+                {% if a.created_by %}
+                  {{ a.created_by.get_full_name|default:a.created_by.username }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'employees:attendance_edit' a.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7">No attendance records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <nav>
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+          {% endif %}
+          <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

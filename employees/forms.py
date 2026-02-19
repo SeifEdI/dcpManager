@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from .models import Employee, Department
+from .models import Attendance
 import re
 
 class EmployeeProfileForm(forms.ModelForm):
@@ -196,3 +197,28 @@ class AddEmployeeForm(forms.Form):
             self.add_error('department', 'Department is required for internal employees.')
         
         return cleaned_data
+
+
+class AttendanceForm(forms.ModelForm):
+    class Meta:
+        model = Attendance
+        fields = ['employee', 'date', 'clock_in', 'clock_out', 'duration', 'note']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'clock_in': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'clock_out': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
+            'duration': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'HH:MM:SS (optional)'}),
+            'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'employee': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        clock_in = cleaned.get('clock_in')
+        clock_out = cleaned.get('clock_out')
+        duration = cleaned.get('duration')
+
+        if not any([clock_in, clock_out, duration]):
+            raise forms.ValidationError('Please provide at least a clock-in, clock-out or duration.')
+
+        return cleaned

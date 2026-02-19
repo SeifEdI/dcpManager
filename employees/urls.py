@@ -11,4 +11,8 @@ urlpatterns = [
     path('profile/', views.employee_profile, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('<int:employee_id>/', views.employee_detail, name='detail'),
+    # Attendance
+    path('attendance/', views.attendance_list, name='attendance_list'),
+    path('attendance/add/', views.attendance_create, name='attendance_add'),
+    path('attendance/<int:pk>/edit/', views.attendance_edit, name='attendance_edit'),
 ]

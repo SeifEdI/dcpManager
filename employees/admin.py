@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import Employee, Department
+from .models import Employee, Department, Attendance
 
 class EmployeeInline(admin.StackedInline):
     model = Employee
@@ -43,3 +43,11 @@ class EmployeeAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(Attendance)
+class AttendanceAdmin(admin.ModelAdmin):
+    list_display = ['employee', 'date', 'clock_in', 'clock_out', 'duration', 'created_by', 'created_at']
+    list_filter = ['date', 'employee__department']
+    search_fields = ['employee__employee_id', 'employee__user__username', 'employee__user__first_name', 'employee__user__last_name']
+    readonly_fields = ['created_at', 'updated_at']

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
+from datetime import timedelta, datetime
 
 class Department(models.Model):
     """Department model for organizing employees"""
@@ -58,3 +59,43 @@ class Employee(models.Model):
     @property
     def is_external(self):
         return self.employee_type == 'external'
+
+
+class Attendance(models.Model):
+    """Attendance / pointage records. Designed for manual admin entry.
+
+    - `date`: jour du pointage
+    - `clock_in` / `clock_out`: heures d'entrée / sortie (optionnelles)
+    - `duration`: durée totale (facultative, peut être calculée)
+    - `created_by`: utilisateur ayant saisi l'enregistrement
+    """
+
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='attendances')
+    date = models.DateField()
+    clock_in = models.TimeField(null=True, blank=True)
+    clock_out = models.TimeField(null=True, blank=True)
+    duration = models.DurationField(null=True, blank=True, help_text='Durée totale (optionnelle)')
+    note = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = (('employee', 'date'),)
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.employee} - {self.date}"
+
+    @property
+    def computed_duration(self):
+        """Retourne la durée calculée entre `clock_in` et `clock_out` si `duration` absent."""
+        if self.duration:
+            return self.duration
+        if self.clock_in and self.clock_out and self.date:
+            dt_in = datetime.combine(self.date, self.clock_in)
+            dt_out = datetime.combine(self.date, self.clock_out)
+            if dt_out < dt_in:
+                dt_out += timedelta(days=1)
+            return dt_out - dt_in
+        return None
