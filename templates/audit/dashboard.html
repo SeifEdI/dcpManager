@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Dashboard - dcpManager{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-shield-alt text-primary me-3"></i>Audit Dashboard
+        </h1>
+        <p class="text-muted mb-0">System activity monitoring and security overview</p>
+    </div>
+    <div class="btn-group">
+        <a href="{% url 'audit:logs' %}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>View All Logs
+        </a>
+        <a href="{% url 'audit:security_events' %}" class="btn btn-outline-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>Security Events
+        </a>
+    </div>
+</div>
+
+<!-- Time Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label for="days" class="form-label">Time Range</label>
+                <select name="days" id="days" class="form-select" onchange="this.form.submit()">
+                    <option value="7" {% if days == 7 %}selected{% endif %}>Last 7 days</option>
+                    <option value="30" {% if days == 30 %}selected{% endif %}>Last 30 days</option>
+                    <option value="90" {% if days == 90 %}selected{% endif %}>Last 90 days</option>
+                    <option value="365" {% if days == 365 %}selected{% endif %}>Last year</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <small class="text-muted">Showing data from the last {{ days }} days</small>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="row g-4 mb-5">
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="dashboard-icon icon-primary mx-auto">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ total_actions|default:"0" }}</h3>
+                <p class="text-muted mb-0">Total Actions</p>
+                <a href="{% url 'audit:logs' %}" class="btn btn-outline-primary btn-sm mt-3">
+                    <i class="fas fa-eye me-2"></i>View Details
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="dashboard-icon icon-info mx-auto">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ total_employee_access|default:"0" }}</h3>
+                <p class="text-muted mb-0">Employee Data Access</p>
+                <a href="{% url 'audit:employee_access_logs' %}" class="btn btn-outline-info btn-sm mt-3">
+                    <i class="fas fa-eye me-2"></i>View Access Logs
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="dashboard-icon icon-warning mx-auto">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ total_security_events|default:"0" }}</h3>
+                <p class="text-muted mb-0">Security Events</p>
+                <a href="{% url 'audit:security_events' %}" class="btn btn-outline-warning btn-sm mt-3">
+                    <i class="fas fa-eye me-2"></i>View Events
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="dashboard-icon {% if unresolved_security_events > 0 %}bg-danger{% else %}icon-success{% endif %} mx-auto">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3 class="h4 mb-1">{{ unresolved_security_events|default:"0" }}</h3>
+                <p class="text-muted mb-0">Unresolved Issues</p>
+                {% if unresolved_security_events > 0 %}
+                    <span class="badge bg-danger mt-2">Needs Attention</span>
+                {% else %}
+                    <span class="badge bg-success mt-2">All Clear</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Analysis -->
+<div class="row g-4">
+    <!-- Top Users -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-friends text-primary me-2"></i>Most Active Users
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_users %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in top_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-primary">{{ user.action_count }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No activity data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions by Type -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie text-success me-2"></i>Actions by Type
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if actions_by_type %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Action Type</th>
+                                    <th class="text-end">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for action in actions_by_type %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ action.action|title }}</span>
+                                    </td>
+                                    <td class="text-end">{{ action.count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No action data available</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent High-Severity Events -->
+{% if recent_high_severity %}
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-circle text-danger me-2"></i>Recent High-Severity Events
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Description</th>
+                                <th>Severity</th>
+                                <th>Module</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in recent_high_severity %}
+                            <tr>
+                                <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                                <td>{{ log.username }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ log.action|title }}</span>
+                                </td>
+                                <td>{{ log.description|truncatechars:80 }}</td>
+                                <td>
+                                    {% if log.severity == 'critical' %}
+                                        <span class="badge bg-danger">Critical</span>
+                                    {% elif log.severity == 'high' %}
+                                        <span class="badge bg-warning">High</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ log.module|title }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}Employees - dcpManager{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 mb-1">
+            <i class="fas fa-users text-primary me-3"></i>Employee Management
+        </h1>
+        <p class="text-muted mb-0">Manage your workforce and employee information</p>
+    </div>
+    {% if can_add_employee %}
+        <a href="{% url 'employees:add' %}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Add New Employee
+        </a>
+    {% endif %}
+</div>
+
+<!-- Filters & Search -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-filter me-2"></i>Search & Filters
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-lg-4">
+                <label for="search" class="form-label">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Name, ID, or position..." value="{{ search_query | default:""}}">
+                </div>
+            </div>
+            <div class="col-lg-2">
+                <label for="type" class="form-label">Employee Type</label>
+                <select name="type" id="type" class="form-select">
+                    <option value="">All Types</option>
+                    <option value="internal" {% if current_type == 'internal' %}selected{% endif %}>
+                        Internal Employee
+                    </option>
+                    <option value="external" {% if current_type == 'external' %}selected{% endif %}>
+                        External Person
+                    </option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    <option value="suspended" {% if current_status == 'suspended' %}selected{% endif %}>Suspended</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <label for="department" class="form-label">Department</label>
+                <select name="department" id="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}" {% if current_department == dept.id|stringformat:"s" %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 d-flex align-items-end">
+                <div class="d-grid w-100 gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Filter
+                    </button>
+                    <a href="{% url 'employees:list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Summary -->
+{% if page_obj %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <span class="text-muted">
+            Showing <strong>{{ page_obj.start_index }}-{{ page_obj.end_index }}</strong> 
+            of <strong>{{ page_obj.paginator.count }}</strong> employees
+        </span>
+    </div>
+    <div class="btn-group" role="group">
+        {% if can_export_employee %}
+            <a href="{% url 'employees:export_csv' %}?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}{% endif %}" 
+               class="btn btn-outline-success btn-sm"
+               data-bs-toggle="tooltip" 
+               title="Export filtered results to CSV">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </a>
+        {% endif %}
+        <a href="{% url 'employees:print_pdf' %}?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}{% endif %}" 
+           class="btn btn-outline-info btn-sm"
+           target="_blank"
+           data-bs-toggle="tooltip" 
+           title="Open PDF preview in new window">
+            <i class="fas fa-print me-2"></i>Print PDF
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Employee Cards/Table -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Employee</th>
+                            <th>Type</th>
+                            <th>Department</th>
+                            <th>Position</th>
+                            <th>Status</th>
+                            <th>Contact</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in page_obj %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="user-avatar me-3">
+                                        <i class="fas fa-user-circle fa-2x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ employee.full_name }}</div>
+                                        <small class="text-muted">ID: {{ employee.employee_id }}</small>
+                                        {% if employee.user.email and can_view_sensitive %}
+                                            <br><small class="text-muted">{{ employee.user.email }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if employee.is_internal %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-building me-1"></i>Internal
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-user-friends me-1"></i>External
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if employee.department %}
+                                    <span class="fw-medium">{{ employee.department.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if employee.position %}
+                                    {{ employee.position }}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if employee.status == 'active' %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle me-1"></i>Active
+                                    </span>
+                                {% elif employee.status == 'inactive' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-pause-circle me-1"></i>Inactive
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Suspended
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if employee.phone_number and can_view_sensitive %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone me-1"></i>{{ employee.phone_number }}
+                                    </small>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'employees:detail' employee.id %}" 
+                                       class="btn btn-outline-primary btn-sm" 
+                                       data-bs-toggle="tooltip" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if can_edit_employee %}
+                                        <button type="button" 
+                                                class="btn btn-outline-warning btn-sm"
+                                                data-bs-toggle="tooltip" title="Edit Employee">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="card-footer bg-light">
+                    <nav aria-label="Employee pagination">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}&{% endif %}page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}&{% endif %}page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if current_type %}type={{ current_type }}&{% endif %}{% if current_status %}status={{ current_status }}&{% endif %}{% if current_department %}department={{ current_department }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-users fa-4x text-muted"></i>
+                </div>
+                <h5 class="text-muted mb-3">No employees found</h5>
+                <p class="text-muted mb-4">
+                    {% if search_query or current_type or current_status or current_department %}
+                        Try adjusting your filters or search terms to find what you're looking for.
+                    {% else %}
+                        No employees have been added to the system yet.
+                    {% endif %}
+                </p>
+                {% if can_add_employee %}
+                    <a href="{% url 'employees:add' %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Add First Employee
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

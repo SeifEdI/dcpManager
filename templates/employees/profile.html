@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - dcpManager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-user-circle"></i> My Profile</h5>
+                <a href="{% url 'employees:edit_profile' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Personal Information</h6>
+                        <p><strong>Full Name:</strong> {{ employee.full_name }}</p>
+                        <p><strong>Username:</strong> {{ employee.user.username }}</p>
+                        <p><strong>Email:</strong> {{ employee.user.email|default:"Not set" }}</p>
+                        <p><strong>Phone:</strong> {{ employee.phone_number|default:"Not set" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Work Information</h6>
+                        <p><strong>Employee ID:</strong> {{ employee.employee_id }}</p>
+                        <p><strong>Type:</strong> 
+                            {% if employee.is_internal %}
+                                <span class="badge bg-primary">Internal Employee</span>
+                            {% else %}
+                                <span class="badge bg-info">External Authorized Person</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Department:</strong> {{ employee.department|default:"N/A" }}</p>
+                        <p><strong>Position:</strong> {{ employee.position|default:"Not set" }}</p>
+                        <p><strong>Hire Date:</strong> {{ employee.hire_date|date:"M d, Y"|default:"Not set" }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if employee.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                            {% elif employee.status == 'inactive' %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% else %}
+                                <span class="badge bg-warning">Suspended</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Account Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Last Login:</strong><br>{{ employee.user.last_login|date:"M d, Y H:i" }}</p>
+                <p><strong>Account Created:</strong><br>{{ employee.created_at|date:"M d, Y" }}</p>
+                <p><strong>Profile Updated:</strong><br>{{ employee.updated_at|date:"M d, Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

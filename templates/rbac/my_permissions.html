@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}My Permissions - dcpManager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-key"></i> My Permissions</h5>
+            </div>
+            <div class="card-body">
+                {% if permissions_summary %}
+                    {% for module, permissions in permissions_summary.items %}
+                        <div class="mb-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-folder"></i> {{ module|title }} Module
+                            </h6>
+                            <div class="row">
+                                {% for permission in permissions %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-2"></i>
+                                            <div>
+                                                <strong>{{ permission.name }}</strong>
+                                                <br><small class="text-muted">{{ permission.description }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <hr>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No specific permissions</h5>
+                        <p class="text-muted">You don't have any specific permissions assigned through roles.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-user-tag"></i> My Roles</h6>
+            </div>
+            <div class="card-body">
+                {% if user_roles %}
+                    {% for role in user_roles %}
+                        <div class="mb-3">
+                            <span class="badge bg-primary fs-6">{{ role.name }}</span>
+                            <p class="small text-muted mt-1">{{ role.description }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No roles assigned</p>
+                {% endif %}
+                
+                {% if user.is_superuser %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-crown"></i>
+                        <strong>Superuser Access</strong><br>
+                        You have full system access as a superuser.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

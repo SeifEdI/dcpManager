@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Logged Out - dcpManager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3><i class="fas fa-sign-out-alt text-success"></i></h3>
+                <h4>Successfully Logged Out</h4>
+            </div>
+            <div class="card-body text-center">
+                <p class="text-muted mb-4">You have been successfully logged out of dcpManager.</p>
+                <p class="mb-4">Thank you for using our production management system.</p>
+                
+                <div class="d-grid">
+                    <a href="{% url 'login' %}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login Again
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-center text-muted">
+                <small>
+                    <i class="fas fa-shield-alt"></i> 
+                    Your session has been securely terminated
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        margin-top: 2rem;
+    }
+    
+    .card-header h3 i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}

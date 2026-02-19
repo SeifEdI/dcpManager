@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Roles - {{ target_user.get_full_name|default:target_user.username }} - dcpManager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1><i class="fas fa-user-cog"></i> Manage User Roles</h1>
+        <p class="text-muted mb-0">
+            Managing roles for: <strong>{{ target_user.get_full_name|default:target_user.username }}</strong>
+            {% if target_user.email %}
+                ({{ target_user.email }})
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'rbac:user_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="row">
+    <!-- Current Roles -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-check"></i> Current Roles
+                    <span class="badge bg-light text-primary ms-2">{{ user_roles.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user_roles %}
+                    <div class="list-group list-group-flush">
+                        {% for user_role in user_roles %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ user_role.role.name }}</h6>
+                                <p class="mb-1 text-muted small">{{ user_role.role.description|default:"No description" }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-plus"></i> Assigned: {{ user_role.assigned_at|date:"M d, Y H:i" }}
+                                    {% if user_role.assigned_by %}
+                                        by {{ user_role.assigned_by.get_full_name|default:user_role.assigned_by.username }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this role?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="remove">
+                                    <input type="hidden" name="role_id" value="{{ user_role.role.id }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No roles assigned</h6>
+                        <p class="text-muted small">This user doesn't have any roles assigned yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Roles -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle"></i> Available Roles
+                    <span class="badge bg-light text-success ms-2">{{ available_roles.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if available_roles %}
+                    <div class="list-group list-group-flush">
+                        {% for role in available_roles %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ role.name }}</h6>
+                                <p class="mb-1 text-muted small">{{ role.description|default:"No description" }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-key"></i> {{ role.permissions.count }} permission{{ role.permissions.count|pluralize }}
+                                </small>
+                            </div>
+                            <div>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to assign this role?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="assign">
+                                    <input type="hidden" name="role_id" value="{{ role.id }}">
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-plus"></i> Assign
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">All roles assigned</h6>
+                        <p class="text-muted small">This user has been assigned all available roles.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Details Modal -->
+<div class="modal fade" id="roleDetailsModal" tabindex="-1" aria-labelledby="roleDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleDetailsModalLabel">Role Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="roleDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Summary Card -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> User Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Username:</strong><br>
+                        <span class="text-muted">{{ target_user.username }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Full Name:</strong><br>
+                        <span class="text-muted">{{ target_user.get_full_name|default:"Not set" }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Email:</strong><br>
+                        <span class="text-muted">{{ target_user.email|default:"Not set" }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Status:</strong><br>
+                        {% if target_user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                        {% if target_user.is_superuser %}
+                            <span class="badge bg-danger">Superuser</span>
+                        {% endif %}
+                        {% if target_user.is_staff %}
+                            <span class="badge bg-warning">Staff</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <strong>Last Login:</strong><br>
+                        <span class="text-muted">{{ target_user.last_login|date:"M d, Y H:i"|default:"Never" }}</span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Date Joined:</strong><br>
+                        <span class="text-muted">{{ target_user.date_joined|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add some interactivity for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to role items
+    const roleItems = document.querySelectorAll('.list-group-item');
+    roleItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f8f9fa';
+        });
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+    
+    // Auto-hide success messages after 5 seconds
+    const alerts = document.querySelectorAll('.alert-success');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}
