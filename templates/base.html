@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,421 +12,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
     
-    <style>
-        :root {
-            --primary-color: #2563eb;
-            --primary-dark: #1d4ed8;
-            --secondary-color: #64748b;
-            --success-color: #059669;
-            --warning-color: #d97706;
-            --danger-color: #dc2626;
-            --info-color: #0891b2;
-            --light-bg: #f8fafc;
-            --dark-bg: #0f172a;
-            --border-color: #e2e8f0;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --sidebar-width: 280px;
-            --header-height: 70px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
-        /* Custom Navbar */
-        .navbar-custom {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            box-shadow: 0 2px 20px rgba(37, 99, 235, 0.1);
-            height: var(--header-height);
-            padding: 0;
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: white !important;
-            text-decoration: none;
-        }
-
-        .navbar-brand i {
-            margin-right: 8px;
-            color: #93c5fd;
-        }
-
-        .nav-link {
-            color: rgba(255, 255, 255, 0.9) !important;
-            font-weight: 500;
-            padding: 0.75rem 1rem !important;
-            border-radius: 8px;
-            margin: 0 4px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: white !important;
-            transform: translateY(-1px);
-        }
-
-        .dropdown-menu {
-            border: none;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            padding: 0.5rem;
-            margin-top: 8px;
-        }
-
-        .dropdown-item {
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .dropdown-item:hover {
-            background-color: var(--light-bg);
-            transform: translateX(4px);
-        }
-
-        .dropdown-item i {
-            width: 20px;
-            margin-right: 8px;
-            color: var(--secondary-color);
-        }
-
-        /* Main Content */
-        .main-content {
-            min-height: calc(100vh - var(--header-height));
-            padding: 2rem 0;
-        }
-
-        /* Cards */
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .card-header {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        /* Buttons */
-        .btn {
-            border-radius: 10px;
-            font-weight: 500;
-            padding: 0.75rem 1.5rem;
-            transition: all 0.3s ease;
-            border: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
-            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, var(--warning-color) 0%, #b45309 100%);
-            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%);
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
-        }
-
-        .btn-outline-primary {
-            border: 2px solid var(--primary-color);
-            color: var(--primary-color);
-            background: transparent;
-        }
-
-        .btn-outline-primary:hover {
-            background: var(--primary-color);
-            transform: translateY(-2px);
-        }
-
-        /* Form Controls */
-        .form-control, .form-select {
-            border: 2px solid var(--border-color);
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            background-color: white;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        /* Tables */
-        .table {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .table thead th {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            color: white;
-            font-weight: 600;
-            border: none;
-            padding: 1rem;
-        }
-
-        .table tbody tr {
-            transition: all 0.2s ease;
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(37, 99, 235, 0.05);
-            transform: scale(1.01);
-        }
-
-        .table tbody td {
-            padding: 1rem;
-            border-color: var(--border-color);
-            vertical-align: middle;
-        }
-
-        /* Badges */
-        .badge {
-            font-weight: 500;
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
-            font-size: 0.75rem;
-        }
-
-        /* Alerts */
-        .alert {
-            border: none;
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-        }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-        }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #1e40af;
-        }
-
-        /* Dashboard Cards */
-        .dashboard-card {
-            background: linear-gradient(135deg, white 0%, #f8fafc 100%);
-            border-left: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
-        }
-
-        .dashboard-card:hover {
-            border-left-width: 8px;
-            transform: translateX(4px);
-        }
-
-        .dashboard-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .icon-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            color: white;
-        }
-
-        .icon-success {
-            background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
-            color: white;
-        }
-
-        .icon-warning {
-            background: linear-gradient(135deg, var(--warning-color) 0%, #b45309 100%);
-            color: white;
-        }
-
-        .icon-info {
-            background: linear-gradient(135deg, var(--info-color) 0%, #0e7490 100%);
-            color: white;
-        }
-
-        /* Pagination */
-        .pagination .page-link {
-            border: none;
-            border-radius: 8px;
-            margin: 0 2px;
-            font-weight: 500;
-            color: var(--primary-color);
-            transition: all 0.3s ease;
-        }
-
-        .pagination .page-link:hover {
-            background-color: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-            border: none;
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 1rem 0;
-            }
-            
-            .card-body {
-                padding: 1rem;
-            }
-            
-            .btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.875rem;
-            }
-        }
-
-        /* Dark Mode Support */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --light-bg: #0f172a;
-                --text-primary: #f1f5f9;
-                --text-secondary: #94a3b8;
-                --border-color: #334155;
-            }
-            
-            body {
-                background-color: var(--dark-bg);
-                color: var(--text-primary);
-            }
-            
-            .card {
-                background-color: #1e293b;
-                color: var(--text-primary);
-            }
-            
-            .form-control, .form-select {
-                background-color: #1e293b;
-                border-color: var(--border-color);
-                color: var(--text-primary);
-            }
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--light-bg);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--secondary-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-color);
-        }
-    </style>
+    
 </head>
 <body>
     <!-- Navigation -->
@@ -457,7 +47,7 @@
                                     <li><a class="dropdown-item" href="{% url 'employees:list' %}">
                                         <i class="fas fa-users"></i>Employees Management
                                     </a></li>
-                                    <li><a class="dropdown-item" href="#">
+                                    <li><a class="dropdown-item" href="{% url 'employees:add' %}">
                                         <i class="fas fa-users-cog"></i>Add employee
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
@@ -465,10 +55,10 @@
                                         <i class="fas fa-shield-alt"></i>Pointage
                                     </a></li>
                                     <li><a class="dropdown-item" href="#">
-                                        <i class="fas fa-list"></i>Audit Logs
+                                        <i class="fas fa-list"></i>Attendance Logs
                                     </a></li>
                                     <li><a class="dropdown-item" href="#">
-                                        <i class="fas fa-exclamation-triangle"></i>Security Events
+                                        <i class="fas fa-exclamation-triangle"></i>Absence Management
                                     </a></li>
                                 {% endif %}
                             </ul>
@@ -498,6 +88,13 @@
                                     <li><a class="dropdown-item" href="{% url 'audit:security_events' %}">
                                         <i class="fas fa-exclamation-triangle"></i>Security Events
                                     </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'user_sessions:connected_users' %}">
+                                        <i class="fas fa-users-cog"></i>Connected Users
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#">
+                                        <i class="fas fa-chart-line"></i>Session Statistics
+                                    </a></li>
                                 {% endif %}
                                 {% if user.is_staff %}
                                     <li><hr class="dropdown-divider"></li>
@@ -508,8 +105,40 @@
                             </ul>
                         </li>
                     {% endif %}
+                    {% if user.has_rbac_permission|default:user.is_staff %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="maintenanceDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-tools me-2"></i>Maintenance
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'maintenance:dashboard' %}">
+                                    <i class="fas fa-tachometer-alt"></i>Maintenance Dashboard
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'maintenance:asset_list' %}">
+                                    <i class="fas fa-industry"></i>Assets
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'maintenance:work_order_list' %}">
+                                    <i class="fas fa-clipboard-list"></i>Work Orders
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'maintenance:schedule_list' %}">
+                                    <i class="fas fa-calendar-alt"></i>Schedules
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
                 </ul>
-                
+
+                <!-- Connected Users Badge -->
+                {% if user.has_rbac_permission|default:user.is_staff %}
+                <div class="navbar-nav me-3">
+                    <a href="{% url 'user_sessions:connected_users' %}" class="connected-badge" id="connectedBadge">
+                        <i class="fas fa-users"></i>
+                        <span id="connectedCount">Loading...</span> Connected
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- User Menu -->
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
@@ -528,6 +157,9 @@
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'audit:my_activity' %}">
                                 <i class="fas fa-history"></i>My Activity
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'user_sessions:my_sessions' %}">
+                                <i class="fas fa-laptop"></i>My Sessions
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'session_management' %}">
                                 <i class="fas fa-shield-alt"></i>Session Management
@@ -602,43 +234,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Logout confirmation
-        function confirmLogout() {
-            const modal = new bootstrap.Modal(document.getElementById('logoutModal'));
-            modal.show();
-        }
-
-        // Auto-hide alerts after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                setTimeout(() => {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 5000);
-            });
-        });
-
-        // Add loading state to buttons
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function() {
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = '<span class="loading me-2"></span>Processing...';
-                    submitBtn.disabled = true;
-                    
-                    // Re-enable after 10 seconds as fallback
-                    setTimeout(() => {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    }, 10000);
-                }
-            });
-        });
-    </script>
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
 
     {% block extra_js %}{% endblock %}
 </body>

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Work Order – dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:work_order_list' %}">Work Orders</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:work_order_detail' work_order.pk %}">{{ work_order.work_order_number }}</a></li>
+            <li class="breadcrumb-item active">Complete</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-double me-2"></i>Complete Work Order: {{ work_order.work_order_number }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <strong>{{ work_order.title }}</strong><br>
+                        <small>Asset: {{ work_order.asset.name }} ({{ work_order.asset.asset_id }})</small>
+                    </div>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if log_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ log_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <h6 class="text-muted text-uppercase small fw-semibold border-bottom pb-2 mb-3">Maintenance Log Entry</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ log_form.performed_by.id_for_label }}">Performed By</label>
+                                {{ log_form.performed_by }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ log_form.performed_at.id_for_label }}">Performed At</label>
+                                {{ log_form.performed_at }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ log_form.summary.id_for_label }}">Summary <span class="text-danger">*</span></label>
+                                {{ log_form.summary }}
+                                {% if log_form.summary.errors %}<div class="text-danger small mt-1">{{ log_form.summary.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ log_form.findings.id_for_label }}">Findings</label>
+                                {{ log_form.findings }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ log_form.recommendations.id_for_label }}">Recommendations</label>
+                                {{ log_form.recommendations }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ log_form.next_maintenance_date.id_for_label }}">Next Maintenance Date</label>
+                                {{ log_form.next_maintenance_date }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ log_form.cost.id_for_label }}">Cost</label>
+                                {{ log_form.cost }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-2"></i>Mark as Completed
+                            </button>
+                            <a href="{% url 'maintenance:work_order_detail' work_order.pk %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

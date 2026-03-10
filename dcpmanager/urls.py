@@ -16,9 +16,17 @@ urlpatterns = [
     path('employees/', include('employees.urls')),
     path('rbac/', include('rbac.urls')), # Include RBAC app URLs
     path('audit/', include('audit.urls')), # Include audit app URLs
+    path('sessions/', include('user_sessions.urls')), # Include sessions app URLs
+    path('maintenance/', include('maintenance.urls')), # Include maintenance app URLs
+    #path('api/', include('dcpmanager.api_views')),
+
 ]
+
 
 # Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+
+# Force custom 404 even in DEBUG mode (for testing only)
+handler404 = 'dcpmanager.views.custom_404'

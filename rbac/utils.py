@@ -46,6 +46,7 @@ class RBACManager:
             ('audit.view', 'View Audit Logs', 'audit', 'Can view audit logs and security events'),
             ('audit.manage', 'Manage Audit System', 'audit', 'Can configure audit settings and retention'),
             ('audit.export', 'Export Audit Data', 'audit', 'Can export audit logs and reports'),
+
         ]
         
         created_permissions = []

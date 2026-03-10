@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Asset – dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-trash me-2"></i>Delete Asset</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-4x text-danger mb-4"></i>
+                    <h4>Are you sure you want to delete this asset?</h4>
+                    <p class="text-muted">
+                        <strong>{{ asset.asset_id }} – {{ asset.name }}</strong><br>
+                        This will also delete all associated work orders, schedules and maintenance logs.
+                        This action cannot be undone.
+                    </p>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger me-2">
+                            <i class="fas fa-trash me-2"></i>Yes, Delete
+                        </button>
+                    </form>
+                    <a href="{% url 'maintenance:asset_detail' asset.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

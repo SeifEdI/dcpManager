@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ asset.name }} – dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:asset_list' %}">Assets</a></li>
+            <li class="breadcrumb-item active">{{ asset.asset_id }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-1">
+                <i class="fas fa-industry me-2"></i>{{ asset.name }}
+            </h1>
+            <p class="text-muted mb-0">{{ asset.asset_id }}{% if asset.location %} · {{ asset.location }}{% endif %}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'maintenance:work_order_create' %}?asset={{ asset.pk }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>New Work Order
+            </a>
+            <a href="{% url 'maintenance:asset_edit' asset.pk %}" class="btn btn-outline-warning">
+                <i class="fas fa-edit me-1"></i>Edit
+            </a>
+            <a href="{% url 'maintenance:asset_delete' asset.pk %}" class="btn btn-outline-danger">
+                <i class="fas fa-trash me-1"></i>Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Asset Info -->
+        <div class="col-xl-4">
+            <div class="card mb-4">
+                <div class="card-header"><i class="fas fa-info-circle me-2"></i>Asset Information</div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5 text-muted">Status</dt>
+                        <dd class="col-sm-7">
+                            {% if asset.status == 'operational' %}
+                                <span class="badge bg-success">{{ asset.get_status_display }}</span>
+                            {% elif asset.status == 'under_maintenance' %}
+                                <span class="badge bg-warning text-dark">{{ asset.get_status_display }}</span>
+                            {% elif asset.status == 'out_of_service' %}
+                                <span class="badge bg-danger">{{ asset.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ asset.get_status_display }}</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-5 text-muted">Criticality</dt>
+                        <dd class="col-sm-7">
+                            {% if asset.criticality == 'critical' %}
+                                <span class="badge bg-danger">{{ asset.get_criticality_display }}</span>
+                            {% elif asset.criticality == 'high' %}
+                                <span class="badge bg-warning text-dark">{{ asset.get_criticality_display }}</span>
+                            {% elif asset.criticality == 'medium' %}
+                                <span class="badge bg-primary">{{ asset.get_criticality_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ asset.get_criticality_display }}</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-5 text-muted">Category</dt>
+                        <dd class="col-sm-7">{{ asset.category|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Location</dt>
+                        <dd class="col-sm-7">{{ asset.location|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Assigned To</dt>
+                        <dd class="col-sm-7">{{ asset.assigned_to|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Manufacturer</dt>
+                        <dd class="col-sm-7">{{ asset.manufacturer|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Model</dt>
+                        <dd class="col-sm-7">{{ asset.model_number|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Serial No.</dt>
+                        <dd class="col-sm-7">{{ asset.serial_number|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Purchase Date</dt>
+                        <dd class="col-sm-7">{{ asset.purchase_date|default:'—' }}</dd>
+                        <dt class="col-sm-5 text-muted">Warranty</dt>
+                        <dd class="col-sm-7">
+                            {% if asset.warranty_expiry %}
+                                {{ asset.warranty_expiry }}
+                                {% if asset.warranty_active %}
+                                    <span class="badge bg-success ms-1">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                            {% else %}—{% endif %}
+                        </dd>
+                    </dl>
+                    {% if asset.description %}
+                    <hr>
+                    <p class="text-muted small mb-0">{{ asset.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Maintenance Schedules -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-calendar-alt me-2"></i>Schedules</span>
+                    <a href="{% url 'maintenance:schedule_create' %}" class="btn btn-sm btn-outline-primary">Add</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for sched in schedules %}
+                        <li class="list-group-item d-flex justify-content-between align-items-start py-3">
+                            <div>
+                                <div class="fw-semibold">{{ sched.title }}</div>
+                                <small class="text-muted">{{ sched.get_frequency_display }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if sched.next_due %}
+                                <span class="badge {% if sched.is_overdue %}bg-danger{% else %}bg-info{% endif %}">
+                                    {{ sched.next_due }}
+                                </span>
+                                {% endif %}
+                                <a href="{% url 'maintenance:schedule_edit' sched.pk %}" class="btn btn-sm btn-link p-0 ms-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-3">No schedules.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Orders & History -->
+        <div class="col-xl-8">
+            <!-- Open Work Orders -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-clipboard-list me-2"></i>Open Work Orders</span>
+                    <a href="{% url 'maintenance:work_order_create' %}?asset={{ asset.pk }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>New
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>WO #</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Due</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wo in open_work_orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'maintenance:work_order_detail' wo.pk %}" class="fw-semibold text-primary">
+                                            {{ wo.work_order_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ wo.title|truncatechars:40 }}</td>
+                                    <td>
+                                        {% if wo.priority == 'urgent' %}
+                                            <span class="badge bg-danger">{{ wo.get_priority_display }}</span>
+                                        {% elif wo.priority == 'high' %}
+                                            <span class="badge bg-warning text-dark">{{ wo.get_priority_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ wo.get_priority_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if wo.status == 'in_progress' %}
+                                            <span class="badge bg-warning text-dark">{{ wo.get_status_display }}</span>
+                                        {% elif wo.status == 'on_hold' %}
+                                            <span class="badge bg-info">{{ wo.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">{{ wo.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if wo.due_date %}
+                                            {% if wo.is_overdue %}
+                                                <span class="text-danger fw-semibold">{{ wo.due_date }}</span>
+                                            {% else %}
+                                                {{ wo.due_date }}
+                                            {% endif %}
+                                        {% else %}—{% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'maintenance:work_order_detail' wo.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">No open work orders.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance History -->
+            <div class="card">
+                <div class="card-header"><i class="fas fa-history me-2"></i>Maintenance History</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Work Order</th>
+                                    <th>Performed By</th>
+                                    <th>Summary</th>
+                                    <th>Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in maintenance_logs %}
+                                <tr>
+                                    <td>{{ log.performed_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{% url 'maintenance:work_order_detail' log.work_order.pk %}">
+                                            {{ log.work_order.work_order_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ log.performed_by|default:'—' }}</td>
+                                    <td>{{ log.summary|truncatechars:60 }}</td>
+                                    <td>{{ log.cost|default:'—' }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">No maintenance history.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Datasheets -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-file-alt me-2"></i>Technical Datasheets & Documents</span>
+                    <a href="{% url 'maintenance:datasheet_upload' asset.pk %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-upload me-1"></i>Upload Document
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Version</th>
+                                    <th>File</th>
+                                    <th>Size</th>
+                                    <th>Uploaded By</th>
+                                    <th>Date</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ds in datasheets %}
+                                <tr>
+                                    <td class="fw-semibold">{{ ds.title }}</td>
+                                    <td>
+                                        {% if ds.document_type == 'datasheet' %}
+                                            <span class="badge bg-primary">{{ ds.get_document_type_display }}</span>
+                                        {% elif ds.document_type == 'manual' %}
+                                            <span class="badge bg-info">{{ ds.get_document_type_display }}</span>
+                                        {% elif ds.document_type == 'schematic' %}
+                                            <span class="badge bg-warning text-dark">{{ ds.get_document_type_display }}</span>
+                                        {% elif ds.document_type == 'certificate' %}
+                                            <span class="badge bg-success">{{ ds.get_document_type_display }}</span>
+                                        {% elif ds.document_type == 'warranty' %}
+                                            <span class="badge bg-secondary">{{ ds.get_document_type_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">{{ ds.get_document_type_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ ds.version|default:'—' }}</td>
+                                    <td>
+                                        <a href="{{ ds.file.url }}" target="_blank" class="text-decoration-none">
+                                            <i class="fas fa-file me-1 text-muted"></i>{{ ds.filename }}
+                                        </a>
+                                    </td>
+                                    <td class="text-muted small">{{ ds.file_size_display }}</td>
+                                    <td>{{ ds.uploaded_by|default:'—' }}</td>
+                                    <td class="text-muted small">{{ ds.created_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ ds.file.url }}" target="_blank" class="btn btn-sm btn-outline-info" title="Download">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <form method="post" action="{% url 'maintenance:datasheet_delete' ds.pk %}" class="d-inline"
+                                                  onsubmit="return confirm('Delete datasheet \'{{ ds.title }}\'? This cannot be undone.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="fas fa-file-alt fa-2x mb-2 d-block opacity-25"></i>
+                                        No documents uploaded yet.
+                                        <a href="{% url 'maintenance:datasheet_upload' asset.pk %}" class="ms-1">Upload one now</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -81,3 +81,15 @@ def custom_logout(request):
         logout(request)
         messages.success(request, f'You have been successfully logged out. Goodbye, {username}!')
     return redirect('login')
+
+def custom_404(request, exception):
+    """Custom 404 error page"""
+    return render(request, '404.html', status=404, context={
+        'title': 'Page Not Found',
+        'message': 'The page you are looking for does not exist.',
+        'suggestions': [
+            'Check the URL for typos.', 
+            'Return to the dashboard.',
+            'Contact support if you believe this is an error.'
+        ]
+    })

@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Connected Users - bmConnect{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    .status-active { background-color: #10b981; color: white; }
+    .status-idle { background-color: #f59e0b; color: white; }
+    .status-away { background-color: #6b7280; color: white; }
+    
+    .device-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.5rem;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .auto-refresh {
+        animation: pulse 2s infinite;
+    }
+    
+    .avatar-sm {
+        width: 2rem;
+        height: 2rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Connected Users</h2>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-primary me-2 auto-refresh" id="live-indicator">
+                        🔴 LIVE
+                    </span>
+                    <small class="text-muted">Auto-refresh: 30s</small>
+                </div>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4 id="total-connected">{{ stats.total_connected }}</h4>
+                        <p class="mb-0">Total Connected</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4 id="active-sessions">{{ stats.active_sessions }}</h4>
+                        <p class="mb-0">Active Sessions</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4 id="mobile-sessions">{{ stats.mobile_sessions }}</h4>
+                        <p class="mb-0">Mobile Users</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4 id="unique-users">{{ stats.unique_users }}</h4>
+                        <p class="mb-0">Unique Users</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" 
+                                   placeholder="Search users..." value="{{ search_query }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="device">
+                                <option value="">All Devices</option>
+                                {% for device in device_choices %}
+                                    <option value="{{ device }}" {% if device == device_filter %}selected{% endif %}>
+                                        {{ device|title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="">All Status</option>
+                                {% for status in status_choices %}
+                                    <option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>
+                                        {{ status|title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Connected Users Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Device</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th>Last Activity</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2 text-white">
+                                                {{ session.user.first_name|first|default:session.user.username|first|upper }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ session.user.get_full_name|default:session.user.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ session.user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if session.device_type == 'mobile' %}
+                                                <span style="font-size: 1.2em;">📱</span>
+                                            {% elif session.device_type == 'tablet' %}
+                                                <span style="font-size: 1.2em;">📱</span>
+                                            {% else %}
+                                                <span style="font-size: 1.2em;">💻</span>
+                                            {% endif %}
+                                            <div class="ms-2">
+                                                <div>{{ session.browser|default:"Unknown" }}</div>
+                                                <small class="text-muted">{{ session.os|default:"Unknown" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            {% if session.location_city %}
+                                                {{ session.location_city }}, {{ session.location_country }}
+                                            {% else %}
+                                                <span class="text-muted">Unknown</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ session.ip_address }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ session.status }}">
+                                            {{ session.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span title="Session started: {{ session.created_at }}">
+                                            {{ session.created_at|timesince }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span title="{{ session.last_activity }}">
+                                            {{ session.last_activity|timesince }} ago
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'user_sessions:session_detail' session.id %}" 
+                                               class="btn btn-outline-primary btn-sm" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if perms.user_sessions.delete_activesession %}
+                                            <a href="{% url 'user_sessions:force_logout' session.id %}" 
+                                               class="btn btn-outline-danger btn-sm" title="Force Logout"
+                                               onclick="return confirm('Are you sure you want to force logout this user?')">
+                                                <i class="fas fa-sign-out-alt"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <h5>No connected users found</h5>
+                                            <p>No users are currently connected to the system.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Connected users pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh functionality
+let refreshInterval;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(function() {
+        fetch('{% url "user_sessions:api_statistics" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Update statistics
+                document.getElementById('total-connected').textContent = data.total_connected;
+                document.getElementById('active-sessions').textContent = data.active_sessions;
+                document.getElementById('mobile-sessions').textContent = data.mobile_sessions;
+                document.getElementById('unique-users').textContent = data.unique_users;
+                
+                // Update live indicator
+                const indicator = document.getElementById('live-indicator');
+                indicator.style.animation = 'none';
+                setTimeout(() => {
+                    indicator.style.animation = 'pulse 2s infinite';
+                }, 100);
+            })
+            .catch(error => {
+                console.error('Error updating statistics:', error);
+            });
+    }, 30000); // 30 seconds
+}
+
+// Start auto-refresh when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+});
+
+// Stop auto-refresh when page is hidden
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        clearInterval(refreshInterval);
+    } else {
+        startAutoRefresh();
+    }
+});
+</script>
+{% endblock %}

@@ -20,17 +20,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-jd=y3%2vbx22*44h0&u2!l_*!x4yy4sz4$awv5he!w9%@)&zi$'
+SECRET_KEY = 'gkraxbpvj=w6chv!a48w*!g=gx0@0i30@2+%(47oi(-_^uoej%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'adminlte3',
+    'adminlte3_theme',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -40,6 +42,8 @@ INSTALLED_APPS = [
     'employees',
     'rbac',
     'audit',
+    'user_sessions',
+    'maintenance',
 ]
 
 MIDDLEWARE = [
@@ -48,9 +52,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware', # Moved up before custom middleware to ensure messages work properly
     'dcpmanager.middleware.SessionSecurityMiddleware',  # Custom session timeout middleware
     'audit.middleware.AuditMiddleware', # Custom audit logging middleware
-    'django.contrib.messages.middleware.MessageMiddleware',
+    
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -120,8 +125,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
  #Media files
 MEDIA_URL = '/media/'
@@ -153,3 +159,23 @@ REGULAR_SESSION_TIMEOUT = 30 * 60  # 30 minutes in seconds
 # Audit settings
 AUDIT_LOG_RETENTION_DAYS = 365  # Keep audit logs for 1 year
 AUDIT_LOG_SENSITIVE_FIELDS = ['password', 'ssn', 'credit_card']  # Fields to never log
+
+# Message Framework Configuration
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# Message Tags (Bootstrap compatible)
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
+}
+
+ADMINLTE3_THEME = {
+    "site_title": "dcpManager Admin",
+    "site_header": "dcpManager",
+    "welcome_sign": "Bienvenue au service Bicalcique",
+    "copyright": "dcp 2026",
+}

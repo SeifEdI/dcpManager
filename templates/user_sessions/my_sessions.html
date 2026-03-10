@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Sessions - dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">My Active Sessions</h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        These are all your currently active sessions. If you see any sessions you don't recognize, 
+                        please contact your administrator immediately.
+                    </p>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Device</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Started</th>
+                                    <th>Last Activity</th>
+                                    <th>Current</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in sessions %}
+                                <tr {% if session.session_key == current_session_key %}class="table-primary"{% endif %}>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if session.device_type == 'mobile' %}
+                                                📱
+                                            {% elif session.device_type == 'tablet' %}
+                                                📱
+                                            {% else %}
+                                                💻
+                                            {% endif %}
+                                            <div class="ms-2">
+                                                <div>{{ session.browser }}</div>
+                                                <small class="text-muted">{{ session.os }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            {% if session.location_city %}
+                                                {{ session.location_city }}, {{ session.location_country }}
+                                            {% else %}
+                                                Unknown
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ session.ip_address }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{% if session.status == 'active' %}success{% elif session.status == 'idle' %}warning{% else %}secondary{% endif %}">
+                                            {{ session.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ session.created_at }}</td>
+                                    <td>{{ session.last_activity|timesince }} ago</td>
+                                    <td>
+                                        {% if session.session_key == current_session_key %}
+                                            <span class="badge bg-primary">This Session</span>
+                                        {% else %}
+                                            <span class="text-muted">Other</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <h5>No active sessions found</h5>
+                                            <p>This shouldn't happen since you're currently logged in!</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

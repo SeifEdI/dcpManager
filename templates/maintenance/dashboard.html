@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Maintenance Dashboard – dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-1">
+                <i class="fas fa-tools me-2"></i>Maintenance Dashboard
+            </h1>
+            <p class="text-muted mb-0">Overview of assets, work orders and schedules</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'maintenance:work_order_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>New Work Order
+            </a>
+            <a href="{% url 'maintenance:asset_create' %}" class="btn btn-outline-primary">
+                <i class="fas fa-plus me-2"></i>Add Asset
+            </a>
+        </div>
+    </div>
+
+    <!-- Period selector -->
+    <div class="mb-4">
+        <div class="btn-group" role="group">
+            <a href="?days=7"  class="btn btn-sm {% if days == 7  %}btn-primary{% else %}btn-outline-secondary{% endif %}">Last 7 days</a>
+            <a href="?days=30" class="btn btn-sm {% if days == 30 %}btn-primary{% else %}btn-outline-secondary{% endif %}">Last 30 days</a>
+            <a href="?days=90" class="btn btn-sm {% if days == 90 %}btn-primary{% else %}btn-outline-secondary{% endif %}">Last 90 days</a>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 1 – Assets -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100">
+                <div class="card-body">
+                    <div class="dashboard-icon icon-primary mb-2">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Total Assets</h6>
+                    <h2 class="fw-bold text-primary">{{ total_assets }}</h2>
+                    <small class="text-success"><i class="fas fa-check-circle me-1"></i>{{ operational_assets }} Operational</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100" style="border-left-color: var(--warning-color);">
+                <div class="card-body">
+                    <div class="dashboard-icon icon-warning mb-2">
+                        <i class="fas fa-wrench"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Under Maintenance</h6>
+                    <h2 class="fw-bold text-warning">{{ assets_under_maintenance }}</h2>
+                    <small class="text-danger"><i class="fas fa-times-circle me-1"></i>{{ out_of_service_assets }} Out of Service</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100" style="border-left-color: var(--info-color);">
+                <div class="card-body">
+                    <div class="dashboard-icon icon-info mb-2">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Open Work Orders</h6>
+                    <h2 class="fw-bold" style="color: var(--info-color);">{{ open_work_orders }}</h2>
+                    <small class="text-warning"><i class="fas fa-spinner me-1"></i>{{ in_progress_work_orders }} In Progress</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100" style="border-left-color: var(--danger-color);">
+                <div class="card-body">
+                    <div class="dashboard-icon" style="background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%); color: white; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-bottom:1rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Overdue Work Orders</h6>
+                    <h2 class="fw-bold text-danger">{{ overdue_work_orders }}</h2>
+                    <small class="text-danger"><i class="fas fa-fire me-1"></i>{{ urgent_work_orders }} Urgent</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row 2 – Schedules -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100" style="border-left-color: var(--success-color);">
+                <div class="card-body">
+                    <div class="dashboard-icon icon-success mb-2">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Completed ({{ days }}d)</h6>
+                    <h2 class="fw-bold text-success">{{ completed_work_orders }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100" style="border-left-color: #7c3aed;">
+                <div class="card-body">
+                    <div class="dashboard-icon" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-bottom:1rem;">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Overdue Schedules</h6>
+                    <h2 class="fw-bold" style="color: #7c3aed;">{{ overdue_schedules }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card dashboard-card h-100" style="border-left-color: #0891b2;">
+                <div class="card-body">
+                    <div class="dashboard-icon icon-info mb-2">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h6 class="text-muted text-uppercase small fw-semibold">Due This Week</h6>
+                    <h2 class="fw-bold" style="color: #0891b2;">{{ upcoming_schedules }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Work Orders -->
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-clipboard-list me-2"></i>Recent Work Orders</span>
+                    <a href="{% url 'maintenance:work_order_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>WO #</th>
+                                    <th>Title</th>
+                                    <th>Asset</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wo in recent_work_orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'maintenance:work_order_detail' wo.pk %}" class="fw-semibold text-primary">
+                                            {{ wo.work_order_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ wo.title|truncatechars:40 }}</td>
+                                    <td>
+                                        <a href="{% url 'maintenance:asset_detail' wo.asset.pk %}">{{ wo.asset.name }}</a>
+                                    </td>
+                                    <td>
+                                        {% if wo.priority == 'urgent' %}
+                                            <span class="badge bg-danger">{{ wo.get_priority_display }}</span>
+                                        {% elif wo.priority == 'high' %}
+                                            <span class="badge bg-warning text-dark">{{ wo.get_priority_display }}</span>
+                                        {% elif wo.priority == 'medium' %}
+                                            <span class="badge bg-primary">{{ wo.get_priority_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ wo.get_priority_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if wo.status == 'completed' %}
+                                            <span class="badge bg-success">{{ wo.get_status_display }}</span>
+                                        {% elif wo.status == 'in_progress' %}
+                                            <span class="badge bg-warning text-dark">{{ wo.get_status_display }}</span>
+                                        {% elif wo.status == 'cancelled' %}
+                                            <span class="badge bg-secondary">{{ wo.get_status_display }}</span>
+                                        {% elif wo.status == 'on_hold' %}
+                                            <span class="badge bg-info">{{ wo.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">{{ wo.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if wo.due_date %}
+                                            {% if wo.is_overdue %}
+                                                <span class="text-danger fw-semibold">{{ wo.due_date }}</span>
+                                            {% else %}
+                                                {{ wo.due_date }}
+                                            {% endif %}
+                                        {% else %}—{% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="6" class="text-center text-muted py-4">No work orders found.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Schedules -->
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-calendar-alt me-2"></i>Due This Week</span>
+                    <a href="{% url 'maintenance:schedule_list' %}" class="btn btn-sm btn-outline-primary">All Schedules</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for sched in upcoming_schedules_list %}
+                        <li class="list-group-item d-flex justify-content-between align-items-start py-3">
+                            <div>
+                                <div class="fw-semibold">{{ sched.title }}</div>
+                                <small class="text-muted">{{ sched.asset.name }}</small>
+                            </div>
+                            <span class="badge {% if sched.is_overdue %}bg-danger{% else %}bg-info{% endif %} ms-2">
+                                {{ sched.next_due }}
+                            </span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted py-4">No upcoming schedules.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Overdue Work Orders -->
+            {% if overdue_work_orders_list %}
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Overdue Work Orders
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for wo in overdue_work_orders_list %}
+                        <li class="list-group-item d-flex justify-content-between align-items-start py-3">
+                            <div>
+                                <a href="{% url 'maintenance:work_order_detail' wo.pk %}" class="fw-semibold text-danger">
+                                    {{ wo.work_order_number }}
+                                </a>
+                                <div class="small text-muted">{{ wo.title|truncatechars:35 }}</div>
+                            </div>
+                            <span class="badge bg-danger ms-2">{{ wo.due_date }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

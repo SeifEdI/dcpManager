@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} – dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:dashboard' %}">Maintenance</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'maintenance:work_order_list' %}">Work Orders</a></li>
+            <li class="breadcrumb-item active">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.title.id_for_label }}">Title <span class="text-danger">*</span></label>
+                                {{ form.title }}
+                                {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.work_type.id_for_label }}">Type</label>
+                                {{ form.work_type }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.priority.id_for_label }}">Priority</label>
+                                {{ form.priority }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.asset.id_for_label }}">Asset <span class="text-danger">*</span></label>
+                                {{ form.asset }}
+                                {% if form.asset.errors %}<div class="text-danger small mt-1">{{ form.asset.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.schedule.id_for_label }}">Linked Schedule</label>
+                                {{ form.schedule }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.assigned_to.id_for_label }}">Assigned To</label>
+                                {{ form.assigned_to }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.due_date.id_for_label }}">Due Date</label>
+                                {{ form.due_date }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.estimated_hours.id_for_label }}">Estimated Hours</label>
+                                {{ form.estimated_hours }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.actual_hours.id_for_label }}">Actual Hours</label>
+                                {{ form.actual_hours }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.description.id_for_label }}">Description <span class="text-danger">*</span></label>
+                                {{ form.description }}
+                                {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.resolution_notes.id_for_label }}">Resolution Notes</label>
+                                {{ form.resolution_notes }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.parts_used.id_for_label }}">Parts Used</label>
+                                {{ form.parts_used }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{{ action }} Work Order
+                            </button>
+                            <a href="{% url 'maintenance:work_order_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

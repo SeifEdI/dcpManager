@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Session Details - dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Session Details</h2>
+                <a href="{% url 'user_sessions:connected_users' %}" class="btn btn-secondary">
+                    ← Back to Connected Users
+                </a>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Session Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>User Details</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Username:</strong></td>
+                                            <td>{{ session.user.username }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Full Name:</strong></td>
+                                            <td>{{ session.user.get_full_name|default:"Not provided" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Email:</strong></td>
+                                            <td>{{ session.user.email|default:"Not provided" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Status:</strong></td>
+                                            <td>
+                                                <span class="badge bg-{% if session.status == 'active' %}success{% elif session.status == 'idle' %}warning{% else %}secondary{% endif %}">
+                                                    {{ session.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Session Details</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Session Key:</strong></td>
+                                            <td><code>{{ session.session_key }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Created:</strong></td>
+                                            <td>{{ session.created_at }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Duration:</strong></td>
+                                            <td>{{ session.created_at|timesince }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Last Activity:</strong></td>
+                                            <td>{{ session.last_activity }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Remember Me:</strong></td>
+                                            <td>
+                                                {% if session.remember_me %}
+                                                    <span class="badge bg-info">Yes</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">No</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Device Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                {% if session.device_type == 'mobile' %}
+                                    <div style="font-size: 3rem;">📱</div>
+                                    <h6>Mobile Device</h6>
+                                {% elif session.device_type == 'tablet' %}
+                                    <div style="font-size: 3rem;">📱</div>
+                                    <h6>Tablet Device</h6>
+                                {% else %}
+                                    <div style="font-size: 3rem;">💻</div>
+                                    <h6>Desktop Computer</h6>
+                                {% endif %}
+                            </div>
+                            
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Browser:</strong></td>
+                                    <td>{{ session.browser }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Operating System:</strong></td>
+                                    <td>{{ session.os }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Device Type:</strong></td>
+                                    <td>{{ session.device_type|title }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Location Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div style="font-size: 3rem;">🌍</div>
+                            </div>
+                            
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>IP Address:</strong></td>
+                                    <td><code>{{ session.ip_address }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>City:</strong></td>
+                                    <td>{{ session.location_city|default:"Unknown" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Country:</strong></td>
+                                    <td>{{ session.location_country|default:"Unknown" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if perms.user_sessions.delete_activesession %}
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="card-title mb-0">Session Management</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Force logout this user session. This action cannot be undone.</p>
+                            <a href="{% url 'user_sessions:force_logout' session.id %}" 
+                               class="btn btn-danger btn-sm w-100">
+                                🚪 Force Logout
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

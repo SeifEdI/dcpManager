@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Assets – dcpManager{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-primary mb-1">
+                <i class="fas fa-industry me-2"></i>Assets
+            </h1>
+            <p class="text-muted mb-0">{{ total_count }} asset{{ total_count|pluralize }} found</p>
+        </div>
+        <a href="{% url 'maintenance:asset_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Asset
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    {{ filter_form.search.label_tag }}
+                    {{ filter_form.search }}
+                </div>
+                <div class="col-md-2">
+                    {{ filter_form.status.label_tag }}
+                    {{ filter_form.status }}
+                </div>
+                <div class="col-md-2">
+                    {{ filter_form.criticality.label_tag }}
+                    {{ filter_form.criticality }}
+                </div>
+                <div class="col-md-2">
+                    {{ filter_form.category.label_tag }}
+                    {{ filter_form.category }}
+                </div>
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'maintenance:asset_list' %}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Asset ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Criticality</th>
+                            <th>Assigned To</th>
+                            <th>Open WOs</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asset in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'maintenance:asset_detail' asset.pk %}" class="fw-semibold text-primary">
+                                    {{ asset.asset_id }}
+                                </a>
+                            </td>
+                            <td>{{ asset.name }}</td>
+                            <td>{{ asset.category|default:'—' }}</td>
+                            <td>{{ asset.location|default:'—' }}</td>
+                            <td>
+                                {% if asset.status == 'operational' %}
+                                    <span class="badge bg-success">{{ asset.get_status_display }}</span>
+                                {% elif asset.status == 'under_maintenance' %}
+                                    <span class="badge bg-warning text-dark">{{ asset.get_status_display }}</span>
+                                {% elif asset.status == 'out_of_service' %}
+                                    <span class="badge bg-danger">{{ asset.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ asset.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if asset.criticality == 'critical' %}
+                                    <span class="badge bg-danger">{{ asset.get_criticality_display }}</span>
+                                {% elif asset.criticality == 'high' %}
+                                    <span class="badge bg-warning text-dark">{{ asset.get_criticality_display }}</span>
+                                {% elif asset.criticality == 'medium' %}
+                                    <span class="badge bg-primary">{{ asset.get_criticality_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ asset.get_criticality_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ asset.assigned_to|default:'—' }}</td>
+                            <td>
+                                {% with count=asset.open_work_orders_count %}
+                                {% if count > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ count }}</span>
+                                {% else %}
+                                    <span class="text-muted">0</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'maintenance:asset_detail' asset.pk %}" class="btn btn-outline-primary" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'maintenance:asset_edit' asset.pk %}" class="btn btn-outline-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'maintenance:work_order_create' %}?asset={{ asset.pk }}" class="btn btn-outline-success" title="New Work Order">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-5">
+                                <i class="fas fa-industry fa-3x mb-3 d-block opacity-25"></i>
+                                No assets found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}
